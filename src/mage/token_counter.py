@@ -123,7 +123,8 @@ class TokenCounter:
         self.enable_reformat_json = isinstance(llm, Vertex)
         model = llm.metadata.model_name
         if isinstance(llm, OpenAI):
-            self.encoding = tiktoken.encoding_for_model(model)
+            self.encoding = None
+            # self.encoding = tiktoken.encoding_for_model(model)
         elif isinstance(llm, Anthropic):
             self.encoding = llm.tokenizer
         elif isinstance(llm, Vertex):
@@ -173,8 +174,12 @@ class TokenCounter:
             "TokenCounter count_chat Triggered at temp: %s, top_p: %s"
             % (settings.temperature, settings.top_p)
         )
+        api_key = "EMPTY"
+        base_url = "http://localhost:8000/v1"
         response = llm.chat(
-            messages, top_p=settings.top_p, temperature=settings.temperature
+            messages, top_p=settings.top_p, temperature=settings.temperature,
+            # api_key = api_key,
+            # base_url = base_url
         )
         out_token_cnt = self.count(response.message.content)
         token_cnt = TokenCount(in_token_cnt=in_token_cnt, out_token_cnt=out_token_cnt)
