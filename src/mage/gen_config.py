@@ -54,7 +54,8 @@ def get_llm(**kwargs) -> LLM:
                               top_p = top_p,
                               max_tokens = max_tokens,
                               api_key = api_key,
-                              api_base = base_url)
+                              api_base = base_url,
+                              timeout = 120)
     else:
         raise ValueError(f"gen_config: Invalid provider: {provider}")
 

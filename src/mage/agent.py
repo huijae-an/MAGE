@@ -76,9 +76,52 @@ class TopAgent:
 
         self.tb_gen.reset()
         self.tb_gen.set_golden_tb_path(self.golden_tb_path)
+
+
+
+
+        # raising valueerror instead of logger.info()
         if not self.golden_tb_path:
-            logger.info("No golden testbench provided")
+            raise ValueError("Huijae, fix this! golden_tb_path is not set but expected.")
+        if not self.golden_rtl_blackbox_path:
+            raise ValueError("Huijae, fix this! golden_rtl_blackbox_path is not set but expected.")
+
+
+
+
+        # Huijae's Fix
+        
+        # def extract_interface_only(verilog_code: str) -> str:
+        #     lines = verilog_code.strip().splitlines()
+        #     interface_lines = []
+        #     copying = False
+        #     for line in lines:
+        #         stripped = line.strip()
+        #         if not copying and stripped.startswith("module"):
+        #             copying = True
+        #             interface_lines.append(line)
+        #         elif copying:
+        #             interface_lines.append(line)
+        #             if stripped.startswith(");"):
+        #                 interface_lines.append("")
+        #                 interface_lines.append("endmodule")
+        #                 break
+        #     return "\n".join(interface_lines)
+
+        # with open(self.golden_tb_path, "r") as f:
+        #     testbench = f.read()
+        # with open(self.golden_rtl_blackbox_path, "r") as f:
+        #     ref_sv = f.read()
+        #     interface = extract_interface_only(ref_sv)
+
+
+
+        # 4/11 - Going back to MAGE's tb and if
         testbench, interface = self.tb_gen.chat(spec)
+
+
+
+
         logger.info("Initial tb:")
         logger.info(testbench)
         logger.info("Initial if:")

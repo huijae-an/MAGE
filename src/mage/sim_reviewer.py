@@ -40,7 +40,7 @@ def check_syntax(rtl_path: str) -> Tuple[bool, str]:
 def sim_review_mismatch_cnt(stdout: str) -> int:
     mismatch_cnt = 0
     if "SIMULATION FAILED" in stdout:
-        re_str = r"SIMULATION FAILED - (\d*) MISMATCHES DETECTED"
+        re_str = r"SIMULATION FAILED\s*-\s*(\d+)\s+MISMATCHES DETECTED"
         m = re.search(re_str, stdout)
         assert m is not None, f"Failed to parse mismatch count from: {stdout}"
         mismatch_cnt = int(m.group(1))

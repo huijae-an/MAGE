@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 args_dict = {
     "provider": "vllm",
     # "model": "Qwen/Qwen2.5-7B-Instruct",
-    "model": "rtl-llm/qwen7b-verilog-vhdl",
+    "model": "rtl-llm/qwen-32b-vhdl-1-epoch",
     # "model": "gemini-2.0-flash-001",
     # "model": "claude-3-7-sonnet-20250219",
     # "model": "gpt-4o-2024-08-06",

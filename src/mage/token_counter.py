@@ -181,6 +181,7 @@ class TokenCounter:
             # api_key = api_key,
             # base_url = base_url
         )
+        response.message.content = response.message.content.replace("```","").replace("```json","")
         out_token_cnt = self.count(response.message.content)
         token_cnt = TokenCount(in_token_cnt=in_token_cnt, out_token_cnt=out_token_cnt)
         self.token_cnts[self.cur_tag].append(token_cnt)
