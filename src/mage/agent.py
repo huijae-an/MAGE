@@ -114,11 +114,15 @@ class TopAgent:
         #     ref_sv = f.read()
         #     interface = extract_interface_only(ref_sv)
 
-
-
         # 4/11 - Going back to MAGE's tb and if
-        testbench, interface = self.tb_gen.chat(spec)
+        # testbench, interface = self.tb_gen.chat(spec)
 
+
+
+        # 4/13 - Using verilog-eval's tb & Not using interface
+        with open(self.golden_tb_path, "r") as f:
+            testbench = f.read()
+        interface = ""
 
 
 
