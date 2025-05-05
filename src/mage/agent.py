@@ -74,23 +74,22 @@ class TopAgent:
         assert self.sim_judge
         assert self.rtl_edit
 
+        # Not used anymore
         self.tb_gen.reset()
         self.tb_gen.set_golden_tb_path(self.golden_tb_path)
 
-
-
-
         # raising valueerror instead of logger.info()
         if not self.golden_tb_path:
-            raise ValueError("Huijae, fix this! golden_tb_path is not set but expected.")
+            raise ValueError(
+                "Huijae, fix this! golden_tb_path is not set but expected."
+            )
         if not self.golden_rtl_blackbox_path:
-            raise ValueError("Huijae, fix this! golden_rtl_blackbox_path is not set but expected.")
-
-
-
+            raise ValueError(
+                "Huijae, fix this! golden_rtl_blackbox_path is not set but expected."
+            )
 
         # Huijae's Fix
-        
+
         # def extract_interface_only(verilog_code: str) -> str:
         #     lines = verilog_code.strip().splitlines()
         #     interface_lines = []
@@ -117,14 +116,10 @@ class TopAgent:
         # 4/11 - Going back to MAGE's tb and if
         # testbench, interface = self.tb_gen.chat(spec)
 
-
-
         # 4/13 - Using verilog-eval's tb & Not using interface
         with open(self.golden_tb_path, "r") as f:
             testbench = f.read()
         interface = ""
-
-
 
         logger.info("Initial tb:")
         logger.info(testbench)
@@ -147,34 +142,14 @@ class TopAgent:
         logger.info("Initial rtl:")
         logger.info(rtl_code)
 
-        tb_need_fix = True
         rtl_need_fix = True
         sim_log = ""
-        for i in range(self.sim_max_retry):
+        for _ in range(self.sim_max_retry):
             # run simulation judge, overwrite is_sim_pass
             is_sim_pass, sim_mismatch_cnt, sim_log = self.sim_reviewer.review()
             if is_sim_pass:
-                tb_need_fix = False
                 rtl_need_fix = False
                 break
-            self.sim_judge.reset()
-            tb_need_fix = self.sim_judge.chat(spec, sim_log, rtl_code, testbench)
-            if tb_need_fix:
-                self.tb_gen.reset()
-                if i == 0:
-                    self.tb_gen.gen_display_queue = False
-                    logger.info("Fallback from display queue to display moment")
-                else:
-                    self.tb_gen.set_failed_trial(sim_log, rtl_code, testbench)
-
-                testbench, _ = self.tb_gen.chat(spec)
-                self.write_output(testbench, "tb.sv")
-                logger.info("Revised tb:")
-                logger.info(testbench)
-            else:
-                break
-
-        assert not tb_need_fix, f"tb_need_fix should be False. sim_log: {sim_log}"
 
         candidates_info: List[Tuple[str, int, str]] = []
         if rtl_need_fix:

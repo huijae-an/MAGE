@@ -5,7 +5,7 @@ from llama_index.core.base.llms.types import ChatMessage, ChatResponse, MessageR
 from pydantic import BaseModel
 
 from .log_utils import get_logger
-from .prompts import FAILED_TRIAL_PROMPT, ORDER_PROMPT, RTL_4_SHOT_EXAMPLES
+from .prompts import FAILED_TRIAL_PROMPT, ORDER_PROMPT
 from .sim_reviewer import check_syntax
 from .token_counter import TokenCounter, TokenCounterCached
 from .utils import add_lineno
@@ -13,14 +13,14 @@ from .utils import add_lineno
 logger = get_logger(__name__)
 
 SYSTEM_PROMPT = r"""
-You are an expert in RTL design. You can always write SystemVerilog code with no syntax errors and always reach correct functionality.
+You are an expert in RTL design. You can always write Verilog code with no syntax errors and always reach correct functionality.
 """
 
 GENERATION_PROMPT = r"""
-Please write a module in SystemVerilog RTL language regarding to the given natural language specification.
+Please write a module in Verilog RTL language regarding to the given natural language specification.
 Try to understand the requirements above and give reasoning steps in natural language to achieve it.
 In addition, try to give advice to avoid syntax error.
-An SystemVerilog RTL module always starts with a line starting with the keyword 'module' followed by the module name.
+A Verilog RTL module always starts with a line starting with the keyword 'module' followed by the module name.
 It ends with the keyword 'endmodule'.
 
 [Hints]:
@@ -29,30 +29,20 @@ Carefully example how the kmap in input_spec specifies the order of the inputs.
 Note that x[i] in x[N:1] means x[i-1] in x[N-1:0].
 Then find the inputs corresponding to output=1, 0, and don't-care for each case.
 
-Note in Verilog, for a signal "logic x[M:N]" where M > N, you CANNOT reversely select bits from it like x[1:2];
+Note in Verilog, for a signal "wire x[M:N]" where M > N, you CANNOT reversely select bits from it like x[1:2];
 Instead, you should use concatations like {{x[1], x[2]}}.
 
-The module interface should EXACTLY MATCH module_interface if given.
-Otherwise, should EXACTLY MATCH with the description in input_spec.
+
+The module interface should EXACTLY MATCH with the description in input_spec.
 (Including the module name, input/output ports names, and their types)
 
 
-{examples_prompt}
 <input_spec>
 {input_spec}
 </input_spec>
 """
 
-EXTRA_ORDER_PROMPT = r"""
-Other requirements:
-1. Don't use state_t to define the parameter. Use `localparam` or Use 'reg' or 'logic' for signals as registers or Flip-Flops.
-2. Declare all ports and signals as logic.
-3. Not all the sequential logic need to be reset to 0 when reset is asserted,
-    but these without-reset logic should be initialized to a known value with an initial block instead of being X.
-4. For combinational logic with an always block do not explicitly specify the sensitivity list; instead use always @(*).
-5. NEVER USE 'inside' operator in RTL code. Code like 'state inside {STATE_B, STATE_C, STATE_D}' should NOT be used.
-6. Never USE 'unique' or 'unique0' keywords in RTL code. Code like 'unique case' should NOT be used.
-"""
+
 # Some prompts above comes from:
 # @misc{ho2024verilogcoderautonomousverilogcoding,
 #       title={VerilogCoder: Autonomous Verilog Coding Agents with Graph-based Planning and Abstract Syntax Tree (AST)-based Waveform Tracing Tool},
@@ -151,9 +141,7 @@ class RTLGenerator:
         ret = [
             ChatMessage(content=SYSTEM_PROMPT, role=MessageRole.SYSTEM),
             ChatMessage(
-                content=GENERATION_PROMPT.format(
-                    input_spec=input_spec, examples_prompt=RTL_4_SHOT_EXAMPLES
-                ),
+                content=GENERATION_PROMPT.format(input_spec=input_spec),
                 role=MessageRole.USER,
             ),
         ]
@@ -185,8 +173,7 @@ class RTLGenerator:
             ChatMessage(
                 content=ORDER_PROMPT.format(
                     output_format="".join(json.dumps(EXAMPLE_OUTPUT, indent=4))
-                )
-                + EXTRA_ORDER_PROMPT,
+                ),
                 role=MessageRole.USER,
             ),
         ]

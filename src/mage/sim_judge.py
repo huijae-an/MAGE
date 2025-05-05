@@ -12,8 +12,8 @@ from .utils import add_lineno
 logger = get_logger(__name__)
 
 SYSTEM_PROMPT = r"""
-You are an expert in SystemVerilog design.
-You can always write SystemVerilog code with no syntax errors and always reach correct functionality.
+You are an expert in Verilog design.
+You can always write Verilog code with no syntax errors and always reach correct functionality.
 """
 
 GENERATION_PROMPT = r"""
