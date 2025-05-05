@@ -24,17 +24,11 @@ A Verilog RTL module always starts with a line starting with the keyword 'module
 It ends with the keyword 'endmodule'.
 
 [Hints]:
-For implementing kmap (Karnaugh map), you need to think step by step.
-Carefully example how the kmap in input_spec specifies the order of the inputs.
-Note that x[i] in x[N:1] means x[i-1] in x[N-1:0].
-Then find the inputs corresponding to output=1, 0, and don't-care for each case.
-
-Note in Verilog, for a signal "wire x[M:N]" where M > N, you CANNOT reversely select bits from it like x[1:2];
-Instead, you should use concatations like {{x[1], x[2]}}.
-
+Treat each input and output as wires, unless otherwise specified.
 
 The module interface should EXACTLY MATCH with the description in input_spec.
 (Including the module name, input/output ports names, and their types)
+
 
 
 <input_spec>
