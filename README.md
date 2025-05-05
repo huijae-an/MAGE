@@ -23,7 +23,8 @@ conda activate mage
 # Install the repo as a package.
 # If want to editable install as developer,
 # please check development guide below.
-pip install -e .
+pip install -e . --config-settings editable_mode=compat
+pre-commit install
 ```
 
 ### 2.>To set api key：
