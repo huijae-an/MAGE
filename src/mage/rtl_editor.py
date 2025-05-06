@@ -46,8 +46,30 @@ The information below is give to help your work:
 </sim_failed_log>
 
 [Hints]:
-For implementing kmap (Karnaugh map), you need to think and solve mismatches step by step.
-Find the inputs corresponding to mismatch in sim_failed_log, and set the output to correct value while maintaining other outputs.
+Treat each input and output as wires, unless otherwise specified.
+
+The module interface should EXACTLY MATCH with the description in input_spec.
+(Including the module name, input/output ports names, and their types)
+
+Use **only Verilog** syntax (no SystemVerilog constructs such as `logic`, `always_ff`, `enum`, `automatic`, etc.).
+
+For **sequential logic** (state machines, registers, etc.), use `always @(posedge clk)` blocks and **non-blocking (`<=`) assignments**.
+
+For **combinational logic**, use `always @(*)` blocks and **blocking (`=`) assignments**.
+
+If a **reset** is mentioned:
+- For **synchronous reset**, check the reset condition **inside** the `posedge clk` block.
+- For **asynchronous reset**, include the reset signal in the sensitivity list (e.g. `always @(posedge clk or posedge rst)`).
+
+Use `reg` for outputs that are driven in `always` blocks and for internal state.
+
+Avoid using implicit wire declarations. Declare all intermediate signals explicitly.
+
+Do not use delay statements (e.g., `\#5`), initial blocks (except to initialize known values when necessary), or $display in synthesisable RTL.
+
+Avoid combining blocking and non-blocking assignments in the same block.
+
+Use consistent indentation and comments to improve readability.
 """
 
 EXTRA_ORDER_PROMPT = r"""
@@ -65,11 +87,23 @@ EXTRA_ORDER_PROMPT = r"""
 7. In sequence logic, if the expected output is asserted but the dut output is not,
     carefully examine whether the input signal should affect current output (with comb logic) or next-cycle output (with seq logic).
 
+[General RTL Coding Hints]:
+- Use **non-blocking (`<=`)** assignments in `always @(posedge clk)` blocks for sequential logic.
+- Use **blocking (`=`)** assignments in `always @(*)` blocks for combinational logic.
+- If the input spec mentions a **synchronous reset**, implement the reset inside the clocked always block.
+- Avoid SystemVerilog features like `logic`, `enum`, `unique case`, `interface`, etc. Use only pure Verilog.
+- Avoid declaring `reg` inside port declarations. Declare them separately in the body if needed.
+- Do not assume default values for `reg` or `wire`; initialize explicitly if necessary.
+- Be sure all outputs are assigned in all branches of combinational blocks to avoid inferred latches.
+- Ensure all signals used are declared with the correct width and direction.
+- Use meaningful indentation and formatting — this helps with both readability and matching.
+
 The file content which is going to be edited is given below:
 <rtl_code>
 {rtl_code}
 </rtl_code>
 """
+
 # The prompt above comes from:
 # @misc{ho2024verilogcoderautonomousverilogcoding,
 #       title={VerilogCoder: Autonomous Verilog Coding Agents with Graph-based Planning and Abstract Syntax Tree (AST)-based Waveform Tracing Tool},

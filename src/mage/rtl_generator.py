@@ -29,6 +29,25 @@ Treat each input and output as wires, unless otherwise specified.
 The module interface should EXACTLY MATCH with the description in input_spec.
 (Including the module name, input/output ports names, and their types)
 
+Use **only Verilog** syntax (no SystemVerilog constructs such as `logic`, `always_ff`, `enum`, `automatic`, etc.).
+
+For **sequential logic** (state machines, registers, etc.), use `always @(posedge clk)` blocks and **non-blocking (`<=`) assignments**.
+
+For **combinational logic**, use `always @(*)` blocks and **blocking (`=`) assignments**.
+
+If a **reset** is mentioned:
+- For **synchronous reset**, check the reset condition **inside** the `posedge clk` block.
+- For **asynchronous reset**, include the reset signal in the sensitivity list (e.g. `always @(posedge clk or posedge rst)`).
+
+Use `reg` for outputs that are driven in `always` blocks and for internal state.
+
+Avoid using implicit wire declarations. Declare all intermediate signals explicitly.
+
+Do not use delay statements (e.g., `\#5`), initial blocks (except to initialize known values when necessary), or $display in synthesisable RTL.
+
+Avoid combining blocking and non-blocking assignments in the same block.
+
+Use consistent indentation and comments to improve readability.
 
 
 <input_spec>
