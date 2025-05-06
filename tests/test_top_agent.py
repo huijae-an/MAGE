@@ -161,6 +161,11 @@ def run_round(args: argparse.Namespace, llm: LLM):
     for task, result in results.items():
         print(f'"{task}": "{result}"')
 
+    total_txt_path = os.path.join(args.run_identifier, "total.txt")
+    with open(total_txt_path, "w") as f:
+        for task, result in results.items():
+            f.write(f'"{task}": "{result}"\n')
+
     json.dump(record_json, open(record_file, "w"), indent=4)
 
 
