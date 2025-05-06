@@ -1,7 +1,8 @@
 import argparse
 import json
+import os
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from llama_index.core.llms import LLM
@@ -23,7 +24,7 @@ logger = get_logger(__name__)
 args_dict = {
     "provider": "vllm",
     # "model": "Qwen/Qwen2.5-7B-Instruct",
-    "model": "rtl-llm/qwen-32b-vhdl-1-epoch",
+    "model": "rtl-llm/qwen-32b-chisel-vllm-interleaved",
     # "model": "gemini-2.0-flash-001",
     # "model": "claude-3-7-sonnet-20250219",
     # "model": "gpt-4o-2024-08-06",
@@ -66,11 +67,11 @@ def run_round(args: argparse.Namespace, llm: LLM):
     )
 
     agent = TopAgent(llm)
-    agent.set_output_path(f"./output_{args.run_identifier}")
-    agent.set_log_path(f"./log_{args.run_identifier}")
+    agent.set_output_path(f"{args.run_identifier}/output")
+    agent.set_log_path(f"{args.run_identifier}/log")
     agent.set_redirect_log(True)
     # agent.set_ablation(True)
-    record_file = f"./output_{args.run_identifier}/record.json"
+    record_file = f"{args.run_identifier}/output/record.json"
     record_json: Dict[str, Dict[str, Any]] = {"record_per_run": {}, "total_record": {}}
 
     ret: dict[str, tuple[bool, str]] = {}
@@ -78,6 +79,9 @@ def run_round(args: argparse.Namespace, llm: LLM):
     pass_cnt = 0
     token_sum = TokenCount(in_token_cnt=0, out_token_cnt=0)
     token_limit_cnt = 0
+
+    results = {}
+
     for i, (task_id, spec) in enumerate(spec_dict.items()):
         start_time = time.monotonic()
         print(f"({i+1:03d}/{len(spec_dict):03d}) Current task: {task_id}")
@@ -102,9 +106,9 @@ def run_round(args: argparse.Namespace, llm: LLM):
         )
         print(f"({i+1:03d}/{len(spec_dict):03d}) {task_id}: is_pass = {is_pass}")
         run_token_cnt = agent.token_counter.get_sum_count()
-        print(
-            f"Current problem token count: Input {run_token_cnt.in_token_cnt}, Output {run_token_cnt.out_token_cnt}"
-        )
+        # print(
+        #     f"Current problem token count: Input {run_token_cnt.in_token_cnt}, Output {run_token_cnt.out_token_cnt}"
+        # )
         if agent.token_counter.token_cost:
             run_cost = (
                 run_token_cnt.in_token_cnt
@@ -113,9 +117,9 @@ def run_round(args: argparse.Namespace, llm: LLM):
                 * agent.token_counter.token_cost.out_token_cost_per_token
             )
         run_token_limit_cnt = agent.token_counter.get_total_token()
-        print(f"Current problem token limit consumption: {run_token_limit_cnt}")
+        # print(f"Current problem token limit consumption: {run_token_limit_cnt}")
         token_limit_cnt += run_token_limit_cnt
-        print(f"{'Current problem token cost':<25}: ${run_cost:.2f} USD")
+        # print(f"{'Current problem token cost':<25}: ${run_cost:.2f} USD")
         token_sum += run_token_cnt
         pass_cnt += is_pass
         review_result[task_id] = (is_pass, golden_sim_log)
@@ -125,11 +129,14 @@ def run_round(args: argparse.Namespace, llm: LLM):
             "run_token_cost": f"{run_cost:.2f}",
             "run_time": str(run_time),
         }
+
+        results[task_id] = is_pass
+
     print(f"Pass rate: {pass_cnt}/{len(spec_dict)}")
-    print(
-        f"Total token count: Input {token_sum.in_token_cnt}, Output {token_sum.out_token_cnt}"
-    )
-    print(f"Total token limit consumption: {token_limit_cnt}")
+    # print(
+    #     f"Total token count: Input {token_sum.in_token_cnt}, Output {token_sum.out_token_cnt}"
+    # )
+    # print(f"Total token limit consumption: {token_limit_cnt}")
     if agent.token_counter.token_cost:
         total_cost = (
             token_sum.in_token_cnt
@@ -137,8 +144,8 @@ def run_round(args: argparse.Namespace, llm: LLM):
             + token_sum.out_token_cnt
             * agent.token_counter.token_cost.out_token_cost_per_token
         )
-        print(f"{'Total cost':<25}: ${total_cost:.2f} USD")
-        print(f"{'Avg cost':<25}: ${total_cost / len(spec_dict):.2f} USD")
+        # print(f"{'Total cost':<25}: ${total_cost:.2f} USD")
+        # print(f"{'Avg cost':<25}: ${total_cost / len(spec_dict):.2f} USD")
 
     total_run_time = timedelta(seconds=time.monotonic() - total_start_time)
     print(f"Totally took {total_run_time} to execute")
@@ -150,6 +157,10 @@ def run_round(args: argparse.Namespace, llm: LLM):
         "avg_cost": f"{total_cost / len(spec_dict):.2f}",
         "total_run_time": str(total_run_time),
     }
+
+    for task, result in results.items():
+        print(f'"{task}": "{result}"')
+
     json.dump(record_json, open(record_file, "w"), indent=4)
 
 
@@ -162,15 +173,22 @@ def main():
         max_token=args.max_token,
         provider=args.provider,
         temperature=args.temperature,
-        top_p=args.top_p
+        top_p=args.top_p,
     )
-    identifier_head = args.run_identifier
+
+    os.makedirs("results", exist_ok=True)
+    timestamp = datetime.now().strftime("%b_%d_%H%M")
+    identifier_head = f"results/{timestamp}"
+    os.makedirs(f"{identifier_head}", exist_ok=True)
+
     n = args.n
     set_exp_setting(temperature=args.temperature, top_p=args.top_p)
 
     for i in range(n):
         print(f"Round {i+1}/{n}")
-        args.run_identifier = f"{identifier_head}_{i}"
+        run_id = f"{identifier_head}/round_{i}"
+        os.makedirs(run_id, exist_ok=True)
+        args.run_identifier = run_id
         run_round(args, llm)
 
 
