@@ -17,12 +17,6 @@ You are an expert in RTL design. You can always write Verilog code with no synta
 """
 
 GENERATION_PROMPT = r"""
-Please write a module in Verilog RTL language regarding to the given natural language specification.
-Try to understand the requirements above and give reasoning steps in natural language to achieve it.
-In addition, try to give advice to avoid syntax error.
-A Verilog RTL module always starts with a line starting with the keyword 'module' followed by the module name.
-It ends with the keyword 'endmodule'.
-
 <input_spec>
 {input_spec}
 </input_spec>
@@ -41,19 +35,19 @@ It ends with the keyword 'endmodule'.
 # }
 
 
-IF_PROMPT = r"""
-The module interface is given below:
-<module_interface>
-{module_interface}
-</module_interface>
-"""
+# IF_PROMPT = r"""
+# The module interface is given below:
+# <module_interface>
+# {module_interface}
+# </module_interface>
+# """
 
-TB_PROMPT = r"""
-Another agent has generated a testbench regarding the given input_spec:
-<testbench>
-{testbench}
-</testbench>
-"""
+# TB_PROMPT = r"""
+# Another agent has generated a testbench regarding the given input_spec:
+# <testbench>
+# {testbench}
+# </testbench>
+# """
 
 FORMAT_ERROR_PROMPT = r"""
 The error below has been reported by the format tool:
@@ -132,22 +126,22 @@ class RTLGenerator:
                 role=MessageRole.USER,
             ),
         ]
-        if self.generated_tb:
-            ret.append(
-                ChatMessage(
-                    content=TB_PROMPT.format(testbench=self.generated_tb),
-                    role=MessageRole.USER,
-                )
-            )
+        # if self.generated_tb:
+        #     ret.append(
+        #         ChatMessage(
+        #             content=TB_PROMPT.format(testbench=self.generated_tb),
+        #             role=MessageRole.USER,
+        #         )
+        #     )
         if self.failed_trial:
             ret.extend(self.failed_trial)
-        if self.generated_if:
-            ret.append(
-                ChatMessage(
-                    content=IF_PROMPT.format(module_interface=self.generated_if),
-                    role=MessageRole.USER,
-                )
-            )
+        # if self.generated_if:
+        #     ret.append(
+        #         ChatMessage(
+        #             content=IF_PROMPT.format(module_interface=self.generated_if),
+        #             role=MessageRole.USER,
+        #         )
+        #     )
         if (
             isinstance(self.token_counter, TokenCounterCached)
             and self.token_counter.enable_cache
