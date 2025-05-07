@@ -47,20 +47,6 @@ The information below is given to help your work:
 """
 
 EXTRA_ORDER_PROMPT = r"""
-1. Try to understand the input_spec, locate the suspicious range, and give reasoning steps in natural language to solve the mismatchs 1 by 1.
-    In addition, try to give advice to avoid syntax error.
-2. For sequencial logic, carefully examine whether the signal should change when "next_state" matches, or when "state" matches.
-3. For combinational logic, if encountered error with complicated multiline singal:
-    Try to comment each line of the signal to avoid missing any part.
-4. DO NOT close quotes at last line before the inline comment. It would break the json syntax.
-    If quote is closed before the comment, just don't add the comment.
-5. Do not try to modify the testbench. Only modify the RTL code.
-    Also do not try to change or define RefModule. There is RefModule defined elsewhere.
-6. Always try modify RTL code as long as simulation mismatch exists, even if you think the code is correct.
-    SHOW RESPECT TO THE SIMULATION RESULT.
-7. In sequence logic, if the expected output is asserted but the dut output is not,
-    carefully examine whether the input signal should affect current output (with combinational logic) or next-cycle output (with sequential logic).
-
 The file content which is going to be edited is given below:
 <rtl_code>
 {rtl_code}
