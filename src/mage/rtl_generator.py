@@ -49,6 +49,7 @@ GENERATION_PROMPT = r"""
 # </testbench>
 # """
 
+
 FORMAT_ERROR_PROMPT = r"""
 The error below has been reported by the format tool:
 <format_error>
@@ -173,7 +174,13 @@ class RTLGenerator:
 
     def parse_output(self, response: ChatResponse) -> RTLOutputFormat:
         try:
-            output_json_obj: Dict = json.loads(response.message.content, strict=False)
+            raw_content = response.message.content.strip()
+
+            # Remove leading 'json' if it appears (case insensitive)
+            if raw_content.lower().startswith("json"):
+                raw_content = raw_content[len("json") :].lstrip()
+
+            output_json_obj: Dict = json.loads(raw_content, strict=False)
             ret = RTLOutputFormat(
                 reasoning=output_json_obj["reasoning"], module=output_json_obj["module"]
             )
