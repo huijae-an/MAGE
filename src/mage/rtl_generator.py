@@ -13,7 +13,8 @@ from .utils import add_lineno
 logger = get_logger(__name__)
 
 SYSTEM_PROMPT = r"""
-You are an expert in RTL design. You can always write Verilog code with no syntax errors and always reach correct functionality.
+You are an expert in RTL design. 
+You can always write Verilog code with no syntax errors and always reach correct functionality.
 """
 
 GENERATION_PROMPT = r"""
@@ -21,6 +22,7 @@ GENERATION_PROMPT = r"""
 {input_spec}
 </input_spec>
 """
+
 
 
 # Some prompts above comes from:
@@ -35,6 +37,7 @@ GENERATION_PROMPT = r"""
 # }
 
 
+
 # IF_PROMPT = r"""
 # The module interface is given below:
 # <module_interface>
@@ -42,13 +45,12 @@ GENERATION_PROMPT = r"""
 # </module_interface>
 # """
 
-# TB_PROMPT = r"""
-# Another agent has generated a testbench regarding the given input_spec:
-# <testbench>
-# {testbench}
-# </testbench>
-# """
-
+TB_PROMPT = r"""
+Another agent has generated a testbench regarding the given input_spec:
+<testbench>
+{testbench}
+</testbench>
+"""
 
 FORMAT_ERROR_PROMPT = r"""
 The error below has been reported by the format tool:
@@ -127,13 +129,13 @@ class RTLGenerator:
                 role=MessageRole.USER,
             ),
         ]
-        # if self.generated_tb:
-        #     ret.append(
-        #         ChatMessage(
-        #             content=TB_PROMPT.format(testbench=self.generated_tb),
-        #             role=MessageRole.USER,
-        #         )
-        #     )
+        if self.generated_tb:
+            ret.append(
+                ChatMessage(
+                    content=TB_PROMPT.format(testbench=self.generated_tb),
+                    role=MessageRole.USER,
+                )
+            )
         if self.failed_trial:
             ret.extend(self.failed_trial)
         # if self.generated_if:
@@ -173,20 +175,36 @@ class RTLGenerator:
         ]
 
     def parse_output(self, response: ChatResponse) -> RTLOutputFormat:
+        raw_content = response.message.content
+
+        start = raw_content.find("{")
+        if start == -1:
+            return RTLOutputFormat(reasoning="No opening brace found", module="")
+
+        brace_count = 0
+        end = -1
+        for i in range(start, len(raw_content)):
+            if raw_content[i] == "{":
+                brace_count += 1
+            elif raw_content[i] == "}":
+                brace_count -= 1
+                if brace_count == 0:
+                    end = i + 1
+                    break
+
+        if end == -1:
+            return RTLOutputFormat(reasoning="No complete JSON object found", module="")
+
+        json_candidate = raw_content[start:end]
+
         try:
-            raw_content = response.message.content.strip()
-
-            # Remove leading 'json' if it appears (case insensitive)
-            if raw_content.lower().startswith("json"):
-                raw_content = raw_content[len("json") :].lstrip()
-
-            output_json_obj: Dict = json.loads(raw_content, strict=False)
-            ret = RTLOutputFormat(
-                reasoning=output_json_obj["reasoning"], module=output_json_obj["module"]
+            output_json_obj = json.loads(json_candidate)
+            return RTLOutputFormat(
+                reasoning=output_json_obj["reasoning"],
+                module=output_json_obj["module"]
             )
-        except json.decoder.JSONDecodeError as e:
-            ret = RTLOutputFormat(reasoning=f"Json Decode Error: {str(e)}", module="")
-        return ret
+        except json.JSONDecodeError as e:
+            return RTLOutputFormat(reasoning=f"JSON decode error: {e}", module="")
 
     def chat(
         self,

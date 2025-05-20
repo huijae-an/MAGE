@@ -101,9 +101,12 @@ class RTLEditor:
     ):
         self.token_counter = token_counter
         self.history: List[ChatMessage] = []
-        self.max_trials = 15
+        # self.max_trials = 15
+        # self.succeed_history_max_length = 10
+        # self.fail_history_max_length = 6
+        self.max_trials = 10
         self.succeed_history_max_length = 10
-        self.fail_history_max_length = 6
+        self.fail_history_max_length = 10
         self.is_done = False
         self.last_mismatch_cnt: int | None = None
         self.sim_reviewer = sim_reviewer

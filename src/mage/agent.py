@@ -25,9 +25,11 @@ class TopAgent:
             if TokenCounterCached.is_cache_enabled(llm)
             else TokenCounter(llm)
         )
-        self.sim_max_retry = 4
+        # self.sim_max_retry = 4
+        self.sim_max_retry = 5
         self.rtl_max_candidates = 20
-        self.rtl_selected_candidates = 2
+        # self.rtl_selected_candidates = 2
+        self.rtl_selected_candidates = 5
         self.is_ablation = False
         self.redirect_log = False
         self.output_path = "./output"
