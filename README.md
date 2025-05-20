@@ -9,9 +9,9 @@ MAGE is an open-source multi-agent LLM RTL code generator.
 
 ### 1.> To install the repo itself:
 ```
-git clone https://github.com/stable-lab/MAGE.git
+git clone --recursive git@github.com:huijae-an/MAGE.git
 # To get submodules at the same time
-git clone --recursive https://github.com/stable-lab/MAGE.git
+git clone --recursive git@github.com:huijae-an/MAGE.git
 cd MAGE
 
 # Install conda first if it's not on your machine like "apt install conda"
